@@ -20,7 +20,7 @@ public class Main {
         System.out.println("Starting");
 
         artNetClient = new ch.bildspur.artnet.ArtNetClient();
-        artNetClient.start("192.168.178.131");
+        artNetClient.start("192.168.178.187");
 
         int universes = panelSizeX * panelSizeY * 3 / 510;
         int subnets = universes / 16;
@@ -44,7 +44,6 @@ public class Main {
         rectangle.setLocation(x, y);
         rectangle.setSize(panelSizeX + 1, panelSizeY + 1);
 
-        Calendar calendar = Calendar.getInstance();
         while (true) {
             BufferedImage image = robot.createScreenCapture(rectangle);
             readImage(image);
@@ -54,8 +53,8 @@ public class Main {
 
     public static void readImage(BufferedImage image) {
         int rgbCounterNumber = 0;
-        for (int y = 1; y <= panelSizeY; y++) {
-            for (int x = 1; x <= panelSizeX; x++) {
+        for (int y = 0; y < panelSizeY; y++) {
+            for (int x = 0; x < panelSizeX; x++) {
                 int pixel = image.getRGB(x, y);
                 int red = (pixel >> 16) & 0xff;
                 int green = (pixel >> 8) & 0xff;
@@ -71,19 +70,15 @@ public class Main {
     }
 
     public static void sendToArtNet() {
-        int universes = (int) Math.ceil(panelSizeX * panelSizeY * 3 / 510);
         int pixel = 0;
-        for (int i = 0; i < universes; i++) {
-            byte[] message = new byte[510];
-            for (int j = 0; j < 510; j = j + 3) {
-                message[j] = rgb[pixel];
-                pixel++;
-                message[j] = rgb[pixel];
-                pixel++;
-                message[j] = rgb[pixel];
-                pixel++;
+        int pos = 0;
+        for (int subnet = 0; subnet < 12; subnet++) {
+            for (int universe = 0; universe < 16; universe++) {
+                byte[] message = new byte[512];
+                System.arraycopy(rgb, pos, message, 0, 510);
+                artNetClient.unicastDmx("192.168.178.178", subnet, universe, message);
+                pos = pos + 510;
             }
-            artNetSenders.get(i).sendArtNetData(message, artNetClient);
         }
     }
 }

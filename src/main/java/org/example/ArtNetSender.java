@@ -15,7 +15,7 @@ public class ArtNetSender {
     }
 
     public void sendArtNetData(byte[] data, ArtNetClient artNetClient) {
-        artNetClient.broadcastDmx(subnet, universe, data);
+        artNetClient.unicastDmx("192.168.178.178",subnet, universe, data);
     }
 
 }
